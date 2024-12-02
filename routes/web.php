@@ -11,6 +11,12 @@ use App\Http\Controllers\Client\CouponController;
 use App\Http\Controllers\Admin\ManageController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\CartController;
+use App\Http\Controllers\Frontend\OrderController;
+use App\Http\Controllers\Admin\ManageOrderController;
+use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Frontend\ReviewController;
+use App\Http\Controllers\Frontend\FilterController;
+use App\Http\Controllers\Admin\RoleController;
 
 // Route::get('/', function () {
 //     return view('welcome');
@@ -30,14 +36,20 @@ Route::middleware('auth')->group(function () {
     Route::get('/user/logout', [UserController::class, 'UserLogout'])->name('user.logout');
     Route::get('/change/password', [UserController::class, 'ChangePassword'])->name('change.password');
     Route::post('/user/password/update', [UserController::class, 'UserPasswordUpdate'])->name('user.password.update');
+
    
 });
+
 
 // Get Wishlist data for user 
 Route::get('/all/wishlist', [HomeController::class, 'AllWishlist'])->name('all.wishlist');
 Route::get('/remove/wishlist/{id}', [HomeController::class, 'RemoveWishlist'])->name('remove.wishlist');
 
-
+Route::controller(ManageOrderController::class)->group(function(){
+    Route::get('/user/order/list', 'UserOrderList')->name('user.order.list'); 
+    Route::get('/user/order/details/{id}', 'UserOrderDetails')->name('user.order.details'); 
+    Route::get('/user/invoice/download/{id}', 'UserInvoiceDownload')->name('user.invoice.download');
+});
 
 
 require __DIR__.'/auth.php';
@@ -82,7 +94,7 @@ Route::get('/client/logout', [ClientController::class, 'ClientLogout'])->name('c
 Route::middleware('admin')->group(function () {
 
     Route::controller(CategoryController::class)->group(function(){
-        Route::get('/all/category', 'AllCategory')->name('all.category');
+        Route::get('/all/category', 'AllCategory')->name('all.category')->middleware(['permission:category.all']);
         Route::get('/add/category', 'AddCategory')->name('add.category');
         Route::post('/store/category', 'StoreCategory')->name('category.store');
         Route::get('/edit/category/{id}', 'EditCategory')->name('edit.category');
@@ -123,6 +135,79 @@ Route::middleware('admin')->group(function () {
         Route::get('/delete/banner/{id}', 'DeleteBanner')->name('delete.banner'); 
     });
  
+    Route::controller(ManageOrderController::class)->group(function(){
+        Route::get('/pending/order', 'PendingOrder')->name('pending.order'); 
+        Route::get('/confirm/order', 'ConfirmOrder')->name('confirm.order'); 
+        Route::get('/processing/order', 'ProcessingOrder')->name('processing.order'); 
+        Route::get('/deliverd/order', 'DeliverdOrder')->name('deliverd.order'); 
+
+        Route::get('/admin/order/details/{id}', 'AdminOrderDetails')->name('admin.order.details');
+    });
+
+    Route::controller(ReportController::class)->group(function(){
+        Route::get('/admin/all/reports', 'AminAllReports')->name('admin.all.reports'); 
+        Route::post('/admin/search/bydate', 'AminSearchByDate')->name('admin.search.bydate');
+        Route::post('/admin/search/bymonth', 'AminSearchByMonth')->name('admin.search.bymonth');
+        Route::post('/admin/search/byyear', 'AminSearchByYear')->name('admin.search.byyear');
+    });
+
+    Route::controller(ManageOrderController::class)->group(function(){
+        Route::get('/pening_to_confirm/{id}', 'PendingToConfirm')->name('pening_to_confirm');
+        Route::get('/confirm_to_processing/{id}', 'ConfirmToProcessing')->name('confirm_to_processing'); 
+        Route::get('/processing_to_deliverd/{id}', 'ProcessingToDiliverd')->name('processing_to_deliverd'); 
+
+    });
+
+    Route::controller(ReviewController::class)->group(function(){
+        Route::get('/admin/pending/review', 'AdminPendingReview')->name('admin.pending.review');
+        Route::get('/admin/approve/review', 'AdminApproveReview')->name('admin.approve.review'); 
+        Route::get('/reviewchangeStatus', 'ReviewChangeStatus'); 
+
+    Route::controller(RoleController::class)->group(function(){
+        Route::get('/all/permission', 'AllPermission')->name('all.permission');
+        Route::get('/add/permission', 'AddPermission')->name('add.permission');
+        Route::post('/store/permission', 'StorePermission')->name('permission.store');
+        Route::get('/edit/permission/{id}', 'EditPermission')->name('edit.permission');
+        Route::post('/update/permission', 'UpdatePermission')->name('permission.update');
+        Route::get('/delete/permission/{id}', 'DeletePermission')->name('delete.permission');
+        
+        Route::get('/import/permission', 'ImportPermission')->name('import.permission');
+        Route::get('/export', 'Export')->name('export');
+        Route::post('/import', 'Import')->name('import');
+        });
+    
+    });
+
+    Route::controller(RoleController::class)->group(function(){
+        Route::get('/all/roles', 'AllRoles')->name('all.roles');
+        Route::get('/add/roles', 'AddRoles')->name('add.roles');
+        Route::post('/store/roles', 'StoreRoles')->name('roles.store');
+        Route::get('/edit/roles/{id}', 'EditRoles')->name('edit.roles');
+        Route::post('/update/roles', 'UpdateRoles')->name('roles.update');
+        Route::get('/delete/roles/{id}', 'DeleteRoles')->name('delete.roles');
+        
+    });
+
+    Route::controller(RoleController::class)->group(function(){
+        Route::get('/add/roles/permission', 'AddRolesPermission')->name('add.roles.permission');
+        Route::post('/role/permission/store', 'RolePermissionStore')->name('role.permission.store');
+        Route::get('/all/roles/permission', 'AllRolesPermission')->name('all.roles.permission');
+
+        Route::get('/admin/edit/roles/{id}', 'AdminEditRoles')->name('admin.edit.roles');
+
+        Route::post('/admin/roles/update/{id}', 'AdminRolesUpdate')->name('admin.roles.update');
+        Route::get('/admin/delect/roles/{id}', 'AdminDelectRoles')->name('admin.delect.roles');
+
+    });
+
+    Route::controller(RoleController::class)->group(function(){
+        Route::get('/all/admin', 'AllAdmin')->name('all.admin'); 
+        Route::get('/add/admin', 'AddAdmin')->name('add.admin');
+        Route::post('/admin/store', 'AdminStore')->name('admin.store');
+        Route::get('/edit/admin/{id}', 'Editadmin')->name('edit.admin');
+        Route::post('/admin/update/{id}', 'AdminUpdate')->name('admin.update');
+        Route::get('/delete/admin/{id}', 'DeleteAdmin')->name('delete.admin');
+    });
     
 }); // End Admin Middleware
 
@@ -166,7 +251,24 @@ Route::middleware(['client','status'])->group(function () {
         Route::get('/delete/coupon/{id}', 'DeleteCoupon')->name('delete.coupon');
         
     });
+
+    Route::controller(ManageOrderController::class)->group(function(){
+        Route::get('/all/client/orders', 'AllClientOrders')->name('all.client.orders');
+        Route::get('/client/order/details/{id}', 'ClientOrderDetails')->name('client.order.details');  
+    });
+
+
+    Route::controller(ReportController::class)->group(function(){
+        Route::get('/client/all/reports', 'ClientAllReports')->name('client.all.reports'); 
+        Route::post('/client/search/bydate', 'ClientSearchByDate')->name('client.search.bydate');
+        Route::post('/client/search/bymonth', 'ClientSearchByMonth')->name('client.search.bymonth');
+        Route::post('/client/search/byyear', 'ClientSearchByYear')->name('client.search.byyear');
+    });
     
+    Route::controller(ReviewController::class)->group(function(){
+        Route::get('/client/all/reviews', 'ClientAllReviews')->name('client.all.reviews'); 
+        
+    });
     
 });
  // End Client Middleware
@@ -185,4 +287,20 @@ Route::controller(CartController::class)->group(function(){
     Route::post('/cart/remove', 'CartRemove')->name('cart.remove'); 
     Route::post('/apply-coupon', 'ApplyCoupon');
     Route::get('/remove-coupon', 'CouponRemove');
+    Route::get('/checkout', 'ShopCheckout')->name('checkout');
+});
+
+Route::controller(OrderController::class)->group(function(){
+    Route::post('/cash_order', 'CashOrder')->name('cash_order');
+    Route::post('/stripe_order', 'StripeOrder')->name('stripe_order');
+});
+
+Route::controller(ReviewController::class)->group(function(){
+    Route::post('/store/review', 'StoreReview')->name('store.review');  
+    
+});
+
+Route::controller(FilterController::class)->group(function(){
+    Route::get('/list/restaurant', 'ListRestaurant')->name('list.restaurant');  
+    Route::get('/filter/products', 'FilterProducts')->name('filter.products');
 });
